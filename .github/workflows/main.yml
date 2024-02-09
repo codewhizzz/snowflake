@@ -1,32 +1,29 @@
-# Deploy database changes using schemachange
-# https://github.com/Snowflake-Labs/schemachange
-# (see https://aka.ms/yaml for the YAML schema reference)
-trigger:
-  branches:
-    include:
-    - main
-  paths:
-    include:
-    - /migrations
-pool:
-  vmImage: 'ubuntu-latest'
-variables:
-- group: demo-variables
-steps:
-- task: UsePythonVersion@0
-  displayName: 'Use Python 3.8.x'
-  inputs:
-    versionSpec: '3.8.x'
-- task: Bash@3
-  inputs:
-    targetType: 'inline'
-    script: |
-      echo 'Starting bash task'
-      echo "PROJECT_FOLDER $(PROJECT_FOLDER)"
-      python --version
-      echo 'Step 1: Installing schemachange'
-      pip install schemachange --upgrade
-      echo 'Step 2: Running schemachange'
-      schemachange -f $(PROJECT_FOLDER)/migrations -a $(SF_ACCOUNT) -u $(SF_USERNAME) -r $(SF_ROLE) -w $(SF_WAREHOUSE) -d $(SF_DATABASE) -c $(SF_DATABASE).SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
-  env:
-    SNOWFLAKE_PASSWORD: $(SF_PASSWORD)
+name: Deploy Database Changes with schemachange
+
+# Trigger the workflow on push events to the main branch, for changes in the migrations directory
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'migrations/**'
+
+jobs:
+  deploy-schema-changes:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      name: Check out the repo content
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install schemachange
+      run: pip install schemachange --upgrade
+
+    - name: Run schemachange
+      run: schemachange -f ${{ github.workspace }}/migrations -a ${{ secrets.SF_ACCOUNT }} -u ${{ secrets.SF_USERNAME }} -r ${{ secrets.SF_ROLE }} -w ${{ secrets.SF_WAREHOUSE }} -d ${{ secrets.SF_DATABASE }} -c ${{ secrets.SF_DATABASE }}.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
+      env:
+        SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
