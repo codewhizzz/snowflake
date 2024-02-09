@@ -27,3 +27,4 @@ jobs:
       run: schemachange -f ${{ github.workspace }}/migrations -a ${{ secrets.SF_ACCOUNT }} -u ${{ secrets.SF_USERNAME }} -r ${{ secrets.SF_ROLE }} -w ${{ secrets.SF_WAREHOUSE }} -d ${{ secrets.SF_DATABASE }} -c ${{ secrets.SF_DATABASE }}.SCHEMACHANGE.CHANGE_HISTORY --create-change-history-table
       env:
         SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
+
